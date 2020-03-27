@@ -15,6 +15,7 @@ Type=oneshot
 RemainAfterExit=yes
 ExecStart=/usr/bin/wg-quick up %i
 ExecStop=/usr/bin/wg-quick down %i
+ExecReload=/usr/bin/wg-quick reload %i
 Environment=WG_ENDPOINT_RESOLUTION_RETRIES=infinity
 
 [Install]

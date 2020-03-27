@@ -342,6 +342,10 @@ set_config() {
 	cmd wg setconf "$REAL_INTERFACE" <(echo "$WG_CONFIG")
 }
 
+sync_config() {
+	cmd wg syncconf "$REAL_INTERFACE" <(echo "$WG_CONFIG")
+}
+
 save_config() {
 	local old_umask new_config current_config address network cmd
 	new_config=$'[Interface]\n'
@@ -390,7 +394,7 @@ execute_hooks() {
 
 cmd_usage() {
 	cat >&2 <<-_EOF
-	Usage: $PROGRAM [ up | down | save | strip ] [ CONFIG_FILE | INTERFACE ]
+	Usage: $PROGRAM [ up | down | reload | save | strip ] [ CONFIG_FILE | INTERFACE ]
 
 	  CONFIG_FILE is a configuration file, whose filename is the interface name
 	  followed by \`.conf'. Otherwise, INTERFACE is an interface name, with
@@ -448,6 +452,11 @@ cmd_down() {
 	execute_hooks "${POST_DOWN[@]}"
 }
 
+cmd_reload() {
+	[[ " $(wg show interfaces) " == *" $INTERFACE "* ]] || die "\`$INTERFACE' is not a WireGuard interface"
+	sync_config
+}
+
 cmd_save() {
 	if ! get_real_interface || [[ " $(wg show interfaces) " != *" $REAL_INTERFACE "* ]]; then
 		die "\`$INTERFACE' is not a WireGuard interface"
@@ -471,6 +480,10 @@ elif [[ $# -eq 2 && $1 == down ]]; then
 	auto_su
 	parse_options "$2"
 	cmd_down
+elif [[ $# -eq 2 && $1 == reload ]]; then
+	auto_su
+	parse_options "$2"
+	cmd_reload
 elif [[ $# -eq 2 && $1 == save ]]; then
 	auto_su
 	parse_options "$2"
